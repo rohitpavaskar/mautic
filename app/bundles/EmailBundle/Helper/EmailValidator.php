@@ -60,6 +60,13 @@ class EmailValidator
     {
         $invalidChar = strpbrk($address, '^&*%');
 
+        if ($invalidChar === false) {
+            // Ensure the domain portion of the address does not include an apostrophe
+            list($mailbox, $domain) = explode('@', $address);
+
+            $invalidChar = strpbrk($domain, '\'');
+        }
+
         return $invalidChar ? substr($invalidChar, 0, 1) : $invalidChar;
     }
 
