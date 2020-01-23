@@ -49,6 +49,26 @@ return [
             'mautic.install.fixture.grape_js' => [
                 'class'     => \Mautic\InstallBundle\InstallFixtures\ORM\GrapesJsData::class,
             ],
+            'mautic.install.fixture.page_hit' => [
+                'class'     => \Mautic\InstallBundle\InstallFixtures\ORM\PageHitIndex::class,
+                'tag'       => \Doctrine\Bundle\FixturesBundle\DependencyInjection\CompilerPass\FixturesCompilerPass::FIXTURE_TAG,
+                'arguments' => [],
+            ],
+        ],
+        'forms' => [
+            \Mautic\InstallBundle\Configurator\Form\CheckStepType::class => [
+                'class' => \Mautic\InstallBundle\Configurator\Form\CheckStepType::class,
+            ],
+            \Mautic\InstallBundle\Configurator\Form\DoctrineStepType::class => [
+                'class' => \Mautic\InstallBundle\Configurator\Form\DoctrineStepType::class,
+            ],
+            \Mautic\InstallBundle\Configurator\Form\EmailStepType::class => [
+                'class' => \Mautic\InstallBundle\Configurator\Form\EmailStepType::class,
+            ],
+            \Mautic\InstallBundle\Configurator\Form\UserStepType::class => [
+                'class'     => \Mautic\InstallBundle\Configurator\Form\UserStepType::class,
+                'arguments' => ['session'],
+            ],
         ],
         'other' => [
             'mautic.install.configurator.step.check' => [
