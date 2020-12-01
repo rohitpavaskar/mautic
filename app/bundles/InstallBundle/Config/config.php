@@ -46,6 +46,14 @@ return [
                 'tag'       => Doctrine\Bundle\FixturesBundle\DependencyInjection\CompilerPass\FixturesCompilerPass::FIXTURE_TAG,
                 'arguments' => [],
             ],
+            'mautic.install.fixture.remove_duplicate_index_on_stat_id_column_from_email_stat_replies_table' => [
+                'class'     => Mautic\InstallBundle\InstallFixtures\ORM\RemoveDuplicatedIndexOnStatIdColumnsFromEmailStatRepliesTable::class,
+                'tag'       => Doctrine\Bundle\FixturesBundle\DependencyInjection\CompilerPass\FixturesCompilerPass::FIXTURE_TAG,
+                'arguments' => [
+                    'mautic.schema.helper.index',
+                    'event_dispatcher',
+                ],
+            ],
             'mautic.install.fixture.grape_js' => [
                 'class'     => Mautic\InstallBundle\InstallFixtures\ORM\GrapesJsData::class,
                 'tag'       => Doctrine\Bundle\FixturesBundle\DependencyInjection\CompilerPass\FixturesCompilerPass::FIXTURE_TAG,

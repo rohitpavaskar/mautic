@@ -119,8 +119,8 @@ class IndexSchemaHelper
     {
         $textColumns = $this->getTextColumns($columns);
 
-        $index = new Index($this->prefix.$name, $textColumns, false, false, $options);
-        if ($this->table->hasIndex($this->prefix.$name)) {
+        $index = new Index($name, $textColumns, false, false, $options);
+        if ($this->table->hasIndex($name)) {
             $this->dropIndexes[] = $index;
         }
 
