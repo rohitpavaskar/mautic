@@ -721,6 +721,14 @@ return [
                     'mautic.lead.model.field',
                 ],
             ],
+            'mautic.form.type.campaignevent_lead_attached' => [
+                'class'     => \Mautic\LeadBundle\Form\Type\CampaignEventLeadAttachedType::class,
+                'arguments' => [
+                    'translator',
+                    'mautic.lead.model.lead',
+                    'mautic.lead.model.field',
+                ],
+            ],
             'mautic.form.type.campaignevent_lead_device' => [
                 'class' => \Mautic\LeadBundle\Form\Type\CampaignEventLeadDeviceType::class,
             ],

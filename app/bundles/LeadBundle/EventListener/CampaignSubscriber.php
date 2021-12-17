@@ -12,6 +12,7 @@ use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
 use Mautic\LeadBundle\Form\Type\AddToCompanyActionType;
+use Mautic\LeadBundle\Form\Type\CampaignEventLeadAttachedType;
 use Mautic\LeadBundle\Form\Type\CampaignEventLeadCampaignsType;
 use Mautic\LeadBundle\Form\Type\CampaignEventLeadDeviceType;
 use Mautic\LeadBundle\Form\Type\CampaignEventLeadFieldValueType;
@@ -228,6 +229,15 @@ class CampaignSubscriber implements EventSubscriberInterface
             'label'       => 'mautic.lead.lead.events.owner',
             'description' => 'mautic.lead.lead.events.owner_descr',
             'formType'    => CampaignEventLeadOwnerType::class,
+            'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
+        ];
+
+        $event->addCondition('lead.added', $trigger);
+
+        $trigger = [
+            'label'       => 'mautic.lead.lead.events.attached',
+            'description' => 'mautic.lead.lead.events.attached_descr',
+            'formType'    => CampaignEventLeadAttachedType::class,
             'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
         ];
 
