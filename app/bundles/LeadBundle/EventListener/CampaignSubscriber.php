@@ -114,7 +114,10 @@ class CampaignSubscriber implements EventSubscriberInterface
                 ['onCampaignTriggerActionChangeOwner', 7],
                 ['onCampaignTriggerActionUpdateCompany', 8],
             ],
-            LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION => ['onCampaignTriggerCondition', 0],
+            LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION => [
+                ['onCampaignTriggerCondition', 0],
+                ['onCampaignTriggerConditionContactAdded', 1],
+            ],
         ];
     }
 
@@ -238,6 +241,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             'label'       => 'mautic.lead.lead.events.attached',
             'description' => 'mautic.lead.lead.events.attached_descr',
             'formType'    => CampaignEventLeadAttachedType::class,
+            'formTheme'   => 'MauticLeadBundle:FormTheme\ContactAddedCondition',
             'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
         ];
 
@@ -513,6 +517,46 @@ class CampaignSubscriber implements EventSubscriberInterface
         }
 
         return $event->setResult($result);
+    }
+
+    public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event)
+    {
+        $lead   = $event->getLead();
+        $result = false;
+
+        if (!$lead || !$lead->getId()) {
+            return $event->setResult(false);
+        }
+
+        $campaign      = $event->getLogEntry()->getCampaign();
+
+        if ($event->checkContext('lead.added')) {
+            $campaignExecutionEventConfig = $event->getConfig();
+            //TODO
+        }
+
+        return $event->setResult($result);
+    }
+
+    public function onCampaignTriggerActionSetManipulator(CampaignExecutionEvent $event): void
+    {
+        $lead = $event->getLead();
+
+        if (!$lead instanceof Lead) {
+            return;
+        }
+
+        $campaign      = $event->getLogEntry()->getCampaign();
+        $campaignEvent = $event->getLogEntry()->getEvent();
+
+        $lead->setManipulator(
+            new LeadManipulator(
+                'campaign',
+                'trigger-action',
+                $campaignEvent->getId(),
+                sprintf('%s (%s)', $campaignEvent->getName(), $campaign->getName())
+            )
+        );
     }
 
     /**

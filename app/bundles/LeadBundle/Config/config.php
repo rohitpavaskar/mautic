@@ -727,6 +727,7 @@ return [
                     'translator',
                     'mautic.lead.model.lead',
                     'mautic.lead.model.field',
+                    'mautic.lead.model.list',
                 ],
             ],
             'mautic.form.type.campaignevent_lead_device' => [
