@@ -33,6 +33,7 @@ use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
+use Mautic\LeadBundle\Segment\OperatorOptions;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CampaignSubscriber implements EventSubscriberInterface
@@ -528,11 +529,29 @@ class CampaignSubscriber implements EventSubscriberInterface
             return $event->setResult(false);
         }
 
-        $campaign      = $event->getLogEntry()->getCampaign();
-
         if ($event->checkContext('lead.added')) {
+            $campaign = $event->getLogEntry()->getCampaign();
+
             $campaignExecutionEventConfig = $event->getConfig();
-            //TODO
+
+            $timestamp              = empty($campaignExecutionEventConfig['timestamp']) ? null : $campaignExecutionEventConfig['timestamp'];
+            $operator               = empty($campaignExecutionEventConfig['operator']) ? null : $campaignExecutionEventConfig['operator'];
+            $triggerInterval        = empty($campaignExecutionEventConfig['triggerInterval']) ? null : $campaignExecutionEventConfig['triggerInterval'];
+            $triggerIntervalUnit    = empty($campaignExecutionEventConfig['triggerIntervalUnit']) ? null : $campaignExecutionEventConfig['triggerIntervalUnit'];
+
+            if (1 === $timestamp) {
+                $campaignStartDate = !empty($campaign->getPublishUp()) ? $campaign->getPublishUp() : $campaign->getDateAdded();
+                $objEffectiveDate  = new \DateTime($campaignStartDate);
+
+                $interval = new DateInterval('P'.$triggerInterval.$triggerIntervalUnit);
+                if (OperatorOptions::GREATER_THAN == $operator) {
+                    $objEffectiveDate->add($interval);
+                } else {
+                    $objEffectiveDate->sub($interval);
+                }
+
+                $result = ($event->getLogEntry()->getDateTriggered() > $objEffectiveDate);
+            }
         }
 
         return $event->setResult($result);

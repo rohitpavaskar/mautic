@@ -86,7 +86,7 @@ class CampaignEventLeadAttachedType extends AbstractType
                         'lt',
                     ],
                 ]),
-                'required'   => false,
+                'required'   => true,
                 'label_attr' => ['class' => 'control-label'],
                 'attr'       => [
                     'class'        => 'form-control',
@@ -105,7 +105,7 @@ class CampaignEventLeadAttachedType extends AbstractType
                     'class'    => 'form-control',
                 ],
                 'data'      => $data,
-                'required'  => false,
+                'required'  => true,
             ]
         );
 
@@ -128,7 +128,7 @@ class CampaignEventLeadAttachedType extends AbstractType
                     'class' => 'form-control',
                 ],
                 'placeholder' => false,
-                'required'    => false,
+                'required'    => true,
                 'data'        => $data,
             ]
         );
