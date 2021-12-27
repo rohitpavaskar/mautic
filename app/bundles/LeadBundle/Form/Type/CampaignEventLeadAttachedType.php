@@ -57,9 +57,9 @@ class CampaignEventLeadAttachedType extends AbstractType
     }
 
     /**
-     * {@inheritdoc}
+     * @param FormBuilderInterface<FormBuilderInterface> $builder
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add(
             'timestamp',
@@ -94,8 +94,8 @@ class CampaignEventLeadAttachedType extends AbstractType
             ]
         );
 
-        $data = (!isset($options['data']['triggerInterval']) || '' === $options['data']['triggerInterval']
-            || null === $options['data']['triggerInterval']) ? 1 : (int) $options['data']['triggerInterval'];
+        $data = (!isset($options['data']['triggerInterval']) || (empty($options['data']['triggerInterval']) &&
+            !is_numeric($options['data']['triggerInterval']))) ? 1 : (int) $options['data']['triggerInterval'];
         $builder->add(
             'triggerInterval',
             NumberType::class,

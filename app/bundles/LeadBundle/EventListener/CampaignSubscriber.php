@@ -439,7 +439,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         $lead   = $event->getLead();
         $result = false;
 
-        if (!$lead || !$lead->getId()) {
+        if (!($lead && $lead->getId())) {
             return $event->setResult(false);
         }
 
@@ -520,13 +520,18 @@ class CampaignSubscriber implements EventSubscriberInterface
         return $event->setResult($result);
     }
 
-    public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event)
+    /**
+     * @throws \Exception
+     */
+    public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event): void
     {
         $lead   = $event->getLead();
         $result = false;
 
-        if (!$lead || !$lead->getId()) {
-            return $event->setResult(false);
+        if (!($lead && $lead->getId())) {
+            $event->setResult(false);
+
+            return;
         }
 
         if ($event->checkContext('lead.added')) {
@@ -540,10 +545,11 @@ class CampaignSubscriber implements EventSubscriberInterface
             $triggerIntervalUnit    = empty($campaignExecutionEventConfig['triggerIntervalUnit']) ? null : $campaignExecutionEventConfig['triggerIntervalUnit'];
 
             if (1 === $timestamp) {
-                $campaignStartDate = !empty($campaign->getPublishUp()) ? $campaign->getPublishUp() : $campaign->getDateAdded();
-                $objEffectiveDate  = new \DateTime($campaignStartDate);
+                $publishUp        = $campaign->getPublishUp();
+                $dateAdded        = $campaign->getDateAdded();
+                $objEffectiveDate = !empty($publishUp) ? $publishUp : $dateAdded;
 
-                $interval = new DateInterval('P'.$triggerInterval.$triggerIntervalUnit);
+                $interval = new \DateInterval('P'.$triggerInterval.$triggerIntervalUnit);
                 if (OperatorOptions::GREATER_THAN == $operator) {
                     $objEffectiveDate->add($interval);
                 } else {
@@ -554,7 +560,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             }
         }
 
-        return $event->setResult($result);
+        $event->setResult($result);
     }
 
     public function onCampaignTriggerActionSetManipulator(CampaignExecutionEvent $event): void

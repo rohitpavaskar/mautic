@@ -31,7 +31,7 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
     private $campaignEventLeadAttachedType;
 
     /**
-     * @var FormBuilderInterface
+     * @var FormBuilderInterface<FormBuilderInterface>
      */
     private $formBuilderInterface;
 
@@ -79,6 +79,9 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
         $this->campaignEventLeadAttachedType->buildForm($this->formBuilderInterface, []);
     }
 
+    /**
+     * @return array[]
+     */
     private function parameters(): array
     {
         return [
