@@ -32,7 +32,7 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
     private $campaignEventLeadAttachedType;
 
     /**
-     * @var MockObject|FormBuilderInterface<FormBuilderInterface>
+     * @var FormBuilderInterface<FormBuilderInterface>
      */
     private $formBuilderInterface;
 
@@ -65,7 +65,7 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
         $this->assertTrue(is_string($blockPrefix));
     }
 
-    public function testThatBuildFormMethodAddsSegmentRebuildTimeWarningOption(): void
+    public function testThatBuildFormMethodAddsContactAddedOptions(): void
     {
         $parameters = $this->parameters();
         $this->formBuilderInterface->expects($this->exactly(4))

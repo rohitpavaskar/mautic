@@ -525,14 +525,9 @@ class CampaignSubscriber implements EventSubscriberInterface
      */
     public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event): CampaignExecutionEvent
     {
-        $lead   = $event->getLead();
         $result = false;
 
-        if (!($lead instanceof Lead && $lead->getId())) {
-            return $event->setResult(false);
-        }
-
-        if ($event->checkContext('lead.field_value')) {
+        if ($event->checkContext('lead.added')) {
             $campaign = $this->campaignModel->getEntity($event->getEvent()['campaign']['id']);
 
             $campaignExecutionEventConfig = $event->getConfig();
@@ -545,7 +540,12 @@ class CampaignSubscriber implements EventSubscriberInterface
             if ('campaign_start_date' == $timestamp) {
                 $publishUp        = $campaign->getPublishUp();
                 $dateAdded        = $campaign->getDateAdded();
-                $objEffectiveDate = !empty($publishUp) ? $publishUp : $dateAdded;
+
+                $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
+
+                if (!($objEffectiveDate instanceof \DateTime)) {
+                    return $event->setResult(false);
+                }
 
                 $interval = new \DateInterval('P'.$triggerInterval.strtoupper($triggerIntervalUnit));
                 $objEffectiveDate->add($interval);
