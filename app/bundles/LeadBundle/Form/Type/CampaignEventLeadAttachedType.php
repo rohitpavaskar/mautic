@@ -58,6 +58,7 @@ class CampaignEventLeadAttachedType extends AbstractType
 
     /**
      * @param FormBuilderInterface<FormBuilderInterface> $builder
+     * @param array<mixed>                               $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -68,7 +69,7 @@ class CampaignEventLeadAttachedType extends AbstractType
                 'label'             => 'mautic.lead.lead.events.campaigns.timestamp',
                 'label_attr'        => ['class' => 'control-label'],
                 'multiple'          => false,
-                'choices'           => ['Campaign Start Date' => 1],
+                'choices'           => ['Campaign Start Date' => 'campaign_start_date'],
                 'attr'              => ['class' => 'form-control'],
                 'required'          => true,
             ]

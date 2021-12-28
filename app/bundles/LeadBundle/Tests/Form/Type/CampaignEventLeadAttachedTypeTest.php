@@ -17,6 +17,7 @@ use Mautic\LeadBundle\Form\Type\CampaignEventLeadAttachedType;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
@@ -31,7 +32,7 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
     private $campaignEventLeadAttachedType;
 
     /**
-     * @var FormBuilderInterface<FormBuilderInterface>
+     * @var MockObject|FormBuilderInterface<FormBuilderInterface>
      */
     private $formBuilderInterface;
 
@@ -80,7 +81,7 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
     }
 
     /**
-     * @return array[]
+     * @return array<mixed>
      */
     private function parameters(): array
     {

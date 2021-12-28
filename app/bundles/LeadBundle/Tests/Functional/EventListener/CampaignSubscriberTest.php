@@ -134,8 +134,8 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         yield [
             'lead.added',
             ['type'      => 'text', 'alias' => 'test_text_field'],
-            ['timestamp' => '1', 'operator' => 'gt', 'triggerInterval' => '1', 'triggerIntervalUnit' => 'd'],
-            false,
+            ['timestamp' => 'campaign_start_date', 'operator' => 'gt', 'triggerInterval' => '1', 'triggerIntervalUnit' => 'd'],
+            true,
         ];
     }
 
@@ -151,6 +151,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $campaign = new Campaign();
         $campaign->setName('My campaign');
         $campaign->setIsPublished(true);
+        $campaign->setDateAdded(new \DateTime());
         $this->em->persist($campaign);
 
         // Create an event for campaign.
