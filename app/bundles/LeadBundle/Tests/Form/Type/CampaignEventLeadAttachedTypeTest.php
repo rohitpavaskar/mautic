@@ -93,7 +93,7 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
                     'label'             => 'mautic.lead.lead.events.campaigns.timestamp',
                     'label_attr'        => ['class' => 'control-label'],
                     'multiple'          => false,
-                    'choices'           => ['Campaign Start Date' => 1],
+                    'choices'           => ['Campaign Start Date' => 'campaign_start_date'],
                     'attr'              => ['class' => 'form-control'],
                     'required'          => true,
                 ],
