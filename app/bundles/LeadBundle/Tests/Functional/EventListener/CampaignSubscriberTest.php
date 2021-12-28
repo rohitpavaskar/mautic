@@ -114,35 +114,26 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
     public function dataEventProperties(): iterable
     {
         yield [
-            'lead.field_value',
             ['type'  => 'datetime', 'alias' => 'date_field'],
             ['field' => 'date_field', 'operator' => 'empty'],
             true,
         ];
         yield [
-            'lead.field_value',
             ['type'  => 'datetime', 'alias' => 'date_field_another'],
             ['field' => 'date_field_another', 'operator' => '!empty'],
             false,
         ];
         yield [
-            'lead.field_value',
             ['type'  => 'text', 'alias' => 'test_text_field'],
             ['field' => 'firstname', 'operator' => 'empty'],
             false,
-        ];
-        yield [
-            'lead.added',
-            ['type'      => 'text', 'alias' => 'test_text_field'],
-            ['timestamp' => 'campaign_start_date', 'operator' => 'gt', 'triggerInterval' => '1', 'triggerIntervalUnit' => 'd'],
-            true,
         ];
     }
 
     /**
      * @dataProvider dataEventProperties
      */
-    public function testOnCampaignTriggerConditionReturnsCorrectResultsForLeadFieldContext(string $type, array $field, array $properties, bool $expected): void
+    public function testOnCampaignTriggerConditionReturnsCorrectResultsForLeadFieldContext(array $field, array $properties, bool $expected): void
     {
         $this->makeField($field);
         $lead = $this->createTestLead($field);
@@ -151,7 +142,6 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $campaign = new Campaign();
         $campaign->setName('My campaign');
         $campaign->setIsPublished(true);
-        $campaign->setDateAdded(new \DateTime());
         $this->em->persist($campaign);
 
         // Create an event for campaign.
@@ -159,7 +149,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $entityEvent->setCampaign($campaign);
         $entityEvent->setName('Test Condition');
         $entityEvent->setEventType('condition');
-        $entityEvent->setType($type);
+        $entityEvent->setType('lead.field_value');
         $entityEvent->setProperties($properties);
 
         $this->em->persist($entityEvent);
@@ -177,6 +167,44 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $result                 = $this->campaignSubscriber->onCampaignTriggerCondition($campaignExecutionEvent);
         $this->assertInstanceOf(CampaignExecutionEvent::class, $result);
         $this->assertSame($expected, $result->getResult());
+    }
+
+    public function testOnCampaignTriggerConditionReturnsCorrectResultsForContactAddedContext(): void
+    {
+        $field = ['type' => 'text', 'alias' => 'test_text_field'];
+        $this->makeField($field);
+        $lead = $this->createTestLead($field);
+
+        // Create a campaign.
+        $campaign = new Campaign();
+        $campaign->setName('My campaign');
+        $campaign->setIsPublished(true);
+        $campaign->setDateAdded(new \DateTime());
+        $this->em->persist($campaign);
+
+        // Create an event for campaign.
+        $entityEvent = new Event();
+        $entityEvent->setCampaign($campaign);
+        $entityEvent->setName('Test Condition');
+        $entityEvent->setEventType('condition');
+        $entityEvent->setType('lead.added');
+        $entityEvent->setProperties(['timestamp' => 'campaign_start_date', 'operator' => 'gt', 'triggerInterval' => '1', 'triggerIntervalUnit' => 'd']);
+
+        $this->em->persist($entityEvent);
+        $this->em->flush();
+
+        $eventProperties = [
+            'lead'            => $lead,
+            'event'           => $entityEvent,
+            'eventDetails'    => [],
+            'systemTriggered' => false,
+            'eventSettings'   => [],
+        ];
+
+        $campaignExecutionEvent = new CampaignExecutionEvent($eventProperties, false);
+        $result                 = $this->campaignSubscriber->onCampaignTriggerConditionContactAdded($campaignExecutionEvent);
+        $this->assertInstanceOf(CampaignExecutionEvent::class, $result);
+        $this->assertSame(false, $result->getResult());
     }
 
     private function makeField(array $fieldDetails): void
