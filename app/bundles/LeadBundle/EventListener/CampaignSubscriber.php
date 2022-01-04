@@ -103,6 +103,7 @@ class CampaignSubscriber implements EventSubscriberInterface
      */
     public static function getSubscribedEvents()
     {
+        // note: the higher the priority(-255 to +255), the earlier the listener is executed
         return [
             CampaignEvents::CAMPAIGN_ON_BUILD      => ['onCampaignBuild', 0],
             LeadEvents::ON_CAMPAIGN_TRIGGER_ACTION => [
@@ -527,35 +528,37 @@ class CampaignSubscriber implements EventSubscriberInterface
     {
         $result = false;
 
-        if ($event->checkContext('lead.added')) {
-            $campaign = $this->campaignModel->getEntity($event->getEvent()['campaign']['id']);
+        if (!$event->checkContext('lead.added')) {
+            return $event->setResult(false);
+        }
 
-            $campaignExecutionEventConfig = $event->getConfig();
+        $campaign = $this->campaignModel->getEntity($event->getEvent()['campaign']['id']);
 
-            $timestamp              = empty($campaignExecutionEventConfig['timestamp']) ? null : $campaignExecutionEventConfig['timestamp'];
-            $operator               = empty($campaignExecutionEventConfig['operator']) ? null : $campaignExecutionEventConfig['operator'];
-            $triggerInterval        = empty($campaignExecutionEventConfig['triggerInterval']) ? null : $campaignExecutionEventConfig['triggerInterval'];
-            $triggerIntervalUnit    = empty($campaignExecutionEventConfig['triggerIntervalUnit']) ? null : $campaignExecutionEventConfig['triggerIntervalUnit'];
+        $campaignExecutionEventConfig = $event->getConfig();
 
-            if ('campaign_start_date' == $timestamp) {
-                $publishUp        = $campaign->getPublishUp();
-                $dateAdded        = $campaign->getDateAdded();
+        $timestamp              = empty($campaignExecutionEventConfig['timestamp']) ? null : $campaignExecutionEventConfig['timestamp'];
+        $operator               = empty($campaignExecutionEventConfig['operator']) ? null : $campaignExecutionEventConfig['operator'];
+        $triggerInterval        = empty($campaignExecutionEventConfig['triggerInterval']) ? null : $campaignExecutionEventConfig['triggerInterval'];
+        $triggerIntervalUnit    = empty($campaignExecutionEventConfig['triggerIntervalUnit']) ? null : $campaignExecutionEventConfig['triggerIntervalUnit'];
 
-                $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
+        if ('campaign_start_date' == $timestamp) {
+            $publishUp        = $campaign->getPublishUp();
+            $dateAdded        = $campaign->getDateAdded();
 
-                if (!($objEffectiveDate instanceof \DateTime)) {
-                    return $event->setResult(false);
-                }
+            $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
 
-                $interval = new \DateInterval('P'.$triggerInterval.strtoupper($triggerIntervalUnit));
-                $objEffectiveDate->add($interval);
+            if (!($objEffectiveDate instanceof \DateTime)) {
+                return $event->setResult(false);
+            }
 
-                $now    = new \DateTime();
-                if (OperatorOptions::LESS_THAN == $operator) {
-                    $result = ($now < $objEffectiveDate);
-                } else {
-                    $result = ($now > $objEffectiveDate);
-                }
+            $interval = new \DateInterval('P'.$triggerInterval.strtoupper($triggerIntervalUnit));
+            $objEffectiveDate->add($interval);
+
+            $now    = new \DateTime();
+            if (OperatorOptions::LESS_THAN == $operator) {
+                $result = ($now < $objEffectiveDate);
+            } else {
+                $result = ($now > $objEffectiveDate);
             }
         }
 
