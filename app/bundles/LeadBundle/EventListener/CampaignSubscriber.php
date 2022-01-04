@@ -103,7 +103,6 @@ class CampaignSubscriber implements EventSubscriberInterface
      */
     public static function getSubscribedEvents()
     {
-        // note: the higher the priority(-255 to +255), the earlier the listener is executed
         return [
             CampaignEvents::CAMPAIGN_ON_BUILD      => ['onCampaignBuild', 0],
             LeadEvents::ON_CAMPAIGN_TRIGGER_ACTION => [
