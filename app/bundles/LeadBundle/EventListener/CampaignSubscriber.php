@@ -118,7 +118,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             ],
             LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION => [
                 ['onCampaignTriggerCondition', 0],
-                ['onCampaignTriggerConditionContactAdded', 0],
+                ['onCampaignTriggerConditionContactAdded', 1],
             ],
         ];
     }
