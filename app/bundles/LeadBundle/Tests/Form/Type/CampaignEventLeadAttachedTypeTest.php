@@ -32,7 +32,7 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
     private $campaignEventLeadAttachedType;
 
     /**
-     * @var FormBuilderInterface<FormBuilderInterface>
+     * @var FormBuilderInterface<FormBuilderInterface>&MockObject
      */
     private $formBuilderInterface;
 
