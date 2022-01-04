@@ -236,7 +236,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
         ];
 
-        $event->addCondition('lead.added', $trigger);
+        $event->addCondition('lead.owner', $trigger);
 
         $trigger = [
             'label'       => 'mautic.lead.lead.events.attached',
@@ -246,7 +246,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
         ];
 
-        $event->addCondition('lead.owner', $trigger);
+        $event->addCondition('lead.added', $trigger);
 
         $trigger = [
             'label'       => 'mautic.lead.lead.events.campaigns',
@@ -535,30 +535,33 @@ class CampaignSubscriber implements EventSubscriberInterface
 
         $campaignExecutionEventConfig = $event->getConfig();
 
-        $timestamp              = empty($campaignExecutionEventConfig['timestamp']) ? null : $campaignExecutionEventConfig['timestamp'];
-        $operator               = empty($campaignExecutionEventConfig['operator']) ? null : $campaignExecutionEventConfig['operator'];
-        $triggerInterval        = empty($campaignExecutionEventConfig['triggerInterval']) ? null : $campaignExecutionEventConfig['triggerInterval'];
-        $triggerIntervalUnit    = empty($campaignExecutionEventConfig['triggerIntervalUnit']) ? null : $campaignExecutionEventConfig['triggerIntervalUnit'];
+        $timestamp              = $campaignExecutionEventConfig['timestamp'] ?? null;
+        $operator               = $campaignExecutionEventConfig['operator'] ?? null;
+        $triggerInterval        = $campaignExecutionEventConfig['triggerInterval'] ?? null;
+        $triggerIntervalUnit    = $campaignExecutionEventConfig['triggerIntervalUnit'] ?? null;
 
-        if ('campaign_start_date' == $timestamp) {
-            $publishUp        = $campaign->getPublishUp();
-            $dateAdded        = $campaign->getDateAdded();
+        // You may replace if statement to switch and the following code to private function when multiple options available
+        if ('campaign_start_date' !== $timestamp) {
+            return $event->setResult($result);
+        }
 
-            $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
+        $publishUp        = $campaign->getPublishUp();
+        $dateAdded        = $campaign->getDateAdded();
 
-            if (!($objEffectiveDate instanceof \DateTime)) {
-                return $event->setResult(false);
-            }
+        $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
 
-            $interval = new \DateInterval('P'.$triggerInterval.strtoupper($triggerIntervalUnit));
-            $objEffectiveDate->add($interval);
+        if (!($objEffectiveDate instanceof \DateTime)) {
+            return $event->setResult(false);
+        }
 
-            $now    = new \DateTime();
-            if (OperatorOptions::LESS_THAN == $operator) {
-                $result = ($now < $objEffectiveDate);
-            } else {
-                $result = ($now > $objEffectiveDate);
-            }
+        $interval = new \DateInterval('P'.$triggerInterval.strtoupper($triggerIntervalUnit));
+        $objEffectiveDate->add($interval);
+
+        $now    = new \DateTime();
+        if (OperatorOptions::LESS_THAN == $operator) {
+            $result = ($now < $objEffectiveDate);
+        } else {
+            $result = ($now > $objEffectiveDate);
         }
 
         return $event->setResult($result);
