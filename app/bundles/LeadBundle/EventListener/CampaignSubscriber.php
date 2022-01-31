@@ -117,7 +117,6 @@ class CampaignSubscriber implements EventSubscriberInterface
             ],
             LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION => [
                 ['onCampaignTriggerCondition', 0],
-                ['onCampaignTriggerConditionContactAdded', 1],
             ],
         ];
     }
@@ -434,7 +433,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         return $event->setResult(true);
     }
 
-    public function onCampaignTriggerCondition(CampaignExecutionEvent $event)
+    public function onCampaignTriggerCondition(CampaignExecutionEvent $event): CampaignExecutionEvent
     {
         $lead   = $event->getLead();
         $result = false;
@@ -479,6 +478,8 @@ class CampaignSubscriber implements EventSubscriberInterface
             $result   = $listRepo->checkLeadSegmentsByIds($lead, $event->getConfig()['segments']);
         } elseif ($event->checkContext('lead.owner')) {
             $result = $this->leadModel->getRepository()->checkLeadOwner($lead, $event->getConfig()['owner']);
+        } elseif ($event->checkContext('lead.added')) {
+            $result = $this->onCampaignTriggerConditionContactAdded($event);
         } elseif ($event->checkContext('lead.campaigns')) {
             $result = $this->campaignModel->getCampaignLeadRepository()->checkLeadInCampaigns($lead, $event->getConfig());
         } elseif ($event->checkContext('lead.field_value')) {
@@ -523,12 +524,10 @@ class CampaignSubscriber implements EventSubscriberInterface
     /**
      * @throws \Exception
      */
-    public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event): CampaignExecutionEvent
+    public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event): bool
     {
-        $result = false;
-
         if (!$event->checkContext('lead.added')) {
-            return $event->setResult(false);
+            return false;
         }
 
         $campaign = $this->campaignModel->getEntity($event->getEvent()['campaign']['id']);
@@ -542,7 +541,7 @@ class CampaignSubscriber implements EventSubscriberInterface
 
         // You may replace if statement to switch and the following code to private function when multiple options available
         if ('campaign_start_date' !== $timestamp) {
-            return $event->setResult($result);
+            return false;
         }
 
         $publishUp        = $campaign->getPublishUp();
@@ -551,10 +550,21 @@ class CampaignSubscriber implements EventSubscriberInterface
         $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
 
         if (!($objEffectiveDate instanceof \DateTime)) {
-            return $event->setResult(false);
+            return false;
         }
 
-        $interval = new \DateInterval('P'.$triggerInterval.strtoupper($triggerIntervalUnit));
+        $triggerIntervalUnit = strtoupper($triggerIntervalUnit);
+        $timeNotation        = '';
+        // add T for Time units
+        if (in_array($triggerIntervalUnit, ['H', 'I'])) {
+            $timeNotation = 'T';
+            // DateInterval Minutes notation is 'M'
+            $triggerIntervalUnit = ('I' == $triggerIntervalUnit) ? 'M' : $triggerIntervalUnit;
+        }
+
+        $duration = 'P'.$timeNotation.$triggerInterval.$triggerIntervalUnit;
+
+        $interval = new \DateInterval($duration);
         $objEffectiveDate->add($interval);
 
         $now    = new \DateTime();
@@ -564,7 +574,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             $result = ($now > $objEffectiveDate);
         }
 
-        return $event->setResult($result);
+        return $result;
     }
 
     public function onCampaignTriggerActionSetManipulator(CampaignExecutionEvent $event): void

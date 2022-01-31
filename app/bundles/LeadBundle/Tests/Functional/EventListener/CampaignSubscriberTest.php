@@ -202,7 +202,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         ];
 
         $campaignExecutionEvent = new CampaignExecutionEvent($eventProperties, false);
-        $result                 = $this->campaignSubscriber->onCampaignTriggerConditionContactAdded($campaignExecutionEvent);
+        $result                 = $this->campaignSubscriber->onCampaignTriggerCondition($campaignExecutionEvent);
         $this->assertInstanceOf(CampaignExecutionEvent::class, $result);
         $this->assertSame(false, $result->getResult());
     }
