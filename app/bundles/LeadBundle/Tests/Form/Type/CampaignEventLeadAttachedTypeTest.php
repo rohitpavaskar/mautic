@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * @copyright   2020 Mautic Contributors. All rights reserved
+ * @copyright   2022 Mautic Contributors. All rights reserved
  * @author      Mautic
  *
  * @link        https://mautic.org

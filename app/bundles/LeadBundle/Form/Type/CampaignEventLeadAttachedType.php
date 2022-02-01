@@ -1,7 +1,7 @@
 <?php
 
 /*
- * @copyright   2014 Mautic Contributors. All rights reserved
+ * @copyright   2022 Mautic Contributors. All rights reserved
  * @author      Mautic
  *
  * @link        http://mautic.org
@@ -11,48 +11,21 @@
 
 namespace Mautic\LeadBundle\Form\Type;
 
-use Mautic\LeadBundle\Helper\FormFieldHelper;
-use Mautic\LeadBundle\Model\FieldModel;
-use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
-use Mautic\LeadBundle\Segment\OperatorOptions;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Translation\TranslatorInterface;
-use Symfony\Component\Validator\Constraints\NotBlank;
 
 class CampaignEventLeadAttachedType extends AbstractType
 {
-    /**
-     * @var TranslatorInterface
-     */
-    protected $translator;
-
-    /**
-     * @var LeadModel
-     */
-    protected $leadModel;
-
-    /**
-     * @var FieldModel
-     */
-    protected $fieldModel;
-
     /**
      * @var ListModel
      */
     protected $listModel;
 
-    public function __construct(TranslatorInterface $translator, LeadModel $leadModel, FieldModel $fieldModel, ListModel $listModel)
+    public function __construct(ListModel $listModel)
     {
-        $this->translator = $translator;
-        $this->leadModel  = $leadModel;
-        $this->fieldModel = $fieldModel;
         $this->listModel  = $listModel;
     }
 
@@ -95,8 +68,9 @@ class CampaignEventLeadAttachedType extends AbstractType
             ]
         );
 
-        $data = (!isset($options['data']['triggerInterval']) || (empty($options['data']['triggerInterval']) &&
-            !is_numeric($options['data']['triggerInterval']))) ? 1 : (int) $options['data']['triggerInterval'];
+        $data = (!isset($options['data']['triggerInterval']) || empty($options['data']['triggerInterval']) ||
+            !is_numeric($options['data']['triggerInterval'])) ? 1 : (int) $options['data']['triggerInterval'];
+
         $builder->add(
             'triggerInterval',
             NumberType::class,
