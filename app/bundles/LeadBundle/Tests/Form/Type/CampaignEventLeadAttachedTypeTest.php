@@ -40,22 +40,14 @@ final class CampaignEventLeadAttachedTypeTest extends TestCase
     {
         parent::setUp();
 
-        $translator = $this->createMock(TranslatorInterface::class);
-        $leadModel  = $this->createMock(LeadModel::class);
-        $fieldModel = $this->createMock(FieldModel::class);
         $listModel  = $this->createMock(ListModel::class);
 
         $listModel->method('getOperatorsForFieldType')->willReturn(
             ['Greater than' => 'gt', 'Lesser than' => 'lt']
         );
 
-        $this->campaignEventLeadAttachedType    = new CampaignEventLeadAttachedType(
-            $translator,
-            $leadModel,
-            $fieldModel,
-            $listModel
-        );
-        $this->formBuilderInterface = $this->createMock(FormBuilderInterface::class);
+        $this->campaignEventLeadAttachedType    = new CampaignEventLeadAttachedType($listModel);
+        $this->formBuilderInterface             = $this->createMock(FormBuilderInterface::class);
     }
 
     public function testThatGetBlockPrefixReturnsAValue(): void
