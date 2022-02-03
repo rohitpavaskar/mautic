@@ -544,8 +544,8 @@ class CampaignSubscriber implements EventSubscriberInterface
             return false;
         }
 
-        $publishUp        = $campaign->getPublishUp();
-        $dateAdded        = $campaign->getDateAdded();
+        $publishUp        = clone $campaign->getPublishUp();
+        $dateAdded        = clone $campaign->getDateAdded();
 
         $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
 
