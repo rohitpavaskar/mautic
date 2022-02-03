@@ -187,8 +187,8 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $entityEvent->setCampaign($campaign);
         $entityEvent->setName('Test Condition');
         $entityEvent->setEventType('condition');
-        $entityEvent->setType('lead.added');
-        $entityEvent->setProperties(['timestamp' => 'campaign_start_date', 'operator' => 'gt', 'triggerInterval' => '1', 'triggerIntervalUnit' => 'd']);
+        $entityEvent->setType('lead.attached');
+        $entityEvent->setProperties(['timestamp' => 'campaign_start_date', 'operator' => 'gt', 'triggerInterval' => '10', 'triggerIntervalUnit' => 'i']);
 
         $this->em->persist($entityEvent);
         $this->em->flush();

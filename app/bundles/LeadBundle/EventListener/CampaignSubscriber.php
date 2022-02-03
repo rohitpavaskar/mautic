@@ -245,7 +245,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
         ];
 
-        $event->addCondition('lead.added', $trigger);
+        $event->addCondition('lead.attached', $trigger);
 
         $trigger = [
             'label'       => 'mautic.lead.lead.events.campaigns',
@@ -478,7 +478,7 @@ class CampaignSubscriber implements EventSubscriberInterface
             $result   = $listRepo->checkLeadSegmentsByIds($lead, $event->getConfig()['segments']);
         } elseif ($event->checkContext('lead.owner')) {
             $result = $this->leadModel->getRepository()->checkLeadOwner($lead, $event->getConfig()['owner']);
-        } elseif ($event->checkContext('lead.added')) {
+        } elseif ($event->checkContext('lead.attached')) {
             $result = $this->onCampaignTriggerConditionContactAdded($event);
         } elseif ($event->checkContext('lead.campaigns')) {
             $result = $this->campaignModel->getCampaignLeadRepository()->checkLeadInCampaigns($lead, $event->getConfig());
@@ -526,10 +526,6 @@ class CampaignSubscriber implements EventSubscriberInterface
      */
     public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event): bool
     {
-        if (!$event->checkContext('lead.added')) {
-            return false;
-        }
-
         $campaign = $this->campaignModel->getEntity($event->getEvent()['campaign']['id']);
 
         $campaignExecutionEventConfig = $event->getConfig();
@@ -544,11 +540,10 @@ class CampaignSubscriber implements EventSubscriberInterface
             return false;
         }
 
-        $publishUp        = clone $campaign->getPublishUp();
-        $dateAdded        = clone $campaign->getDateAdded();
+        $publishUp        = $campaign->getPublishUp();
+        $dateAdded        = $campaign->getDateAdded();
 
-        $objEffectiveDate = !($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
-
+        $objEffectiveDate = ($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
         if (!($objEffectiveDate instanceof \DateTime)) {
             return false;
         }
@@ -564,7 +559,8 @@ class CampaignSubscriber implements EventSubscriberInterface
 
         $duration = 'P'.$timeNotation.$triggerInterval.$triggerIntervalUnit;
 
-        $interval = new \DateInterval($duration);
+        $interval         = new \DateInterval($duration);
+        $objEffectiveDate = clone $objEffectiveDate;
         $objEffectiveDate->add($interval);
 
         $now    = new \DateTime();
