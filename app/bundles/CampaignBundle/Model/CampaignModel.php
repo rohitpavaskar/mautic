@@ -2,6 +2,7 @@
 
 namespace Mautic\CampaignBundle\Model;
 
+use DateTime;
 use Doctrine\ORM\PersistentCollection;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Entity\Campaign;
@@ -154,7 +155,26 @@ class CampaignModel extends CommonFormModel
     }
 
     /**
-     * @param object $entity
+     * Create/edit entity.
+     *
+     * @param Campaign $entity
+     * @param bool     $unlock
+     */
+    public function saveEntity($entity, $unlock = true): void
+    {
+        if ($entity->getIsPublished() && !$entity->getPublishUp()) {
+            $entity->setPublishUp(new DateTime());
+        }
+
+        parent::saveEntity($entity, $unlock);
+    }
+
+    /**
+     * Delete an array of campaigns.
+     *
+     * @param array $campaignIds
+     *
+     * @return array
      */
     public function deleteEntity($entity)
     {
