@@ -162,9 +162,10 @@ class CampaignModel extends CommonFormModel
      */
     public function saveEntity($entity, $unlock = true): void
     {
-        if ($entity->getIsPublished() && !$entity->getPublishUp()) {
-            $defaultDateTime = ($entity->getDateAdded()) ? $entity->getDateAdded() : new DateTime();
-            $entity->setPublishUp($defaultDateTime);
+        $changes = $entity->getChanges();
+
+        if (isset($changes['isPublished']) && $entity->getIsPublished() && !$entity->getPublishUp()) {
+            $entity->setPublishUp(new DateTime());
         }
 
         parent::saveEntity($entity, $unlock);
