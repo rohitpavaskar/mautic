@@ -155,23 +155,6 @@ class CampaignModel extends CommonFormModel
     }
 
     /**
-     * Create/edit entity.
-     *
-     * @param Campaign $entity
-     * @param bool     $unlock
-     */
-    public function saveEntity($entity, $unlock = true): void
-    {
-        $changes = $entity->getChanges();
-
-        if (isset($changes['isPublished']) && $entity->getIsPublished() && !$entity->getPublishUp()) {
-            $entity->setPublishUp(new DateTime());
-        }
-
-        parent::saveEntity($entity, $unlock);
-    }
-
-    /**
      * Delete an array of campaigns.
      *
      * @param array $campaignIds
