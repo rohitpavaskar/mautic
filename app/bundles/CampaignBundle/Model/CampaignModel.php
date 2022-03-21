@@ -2,7 +2,6 @@
 
 namespace Mautic\CampaignBundle\Model;
 
-use DateTime;
 use Doctrine\ORM\PersistentCollection;
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Entity\Campaign;
