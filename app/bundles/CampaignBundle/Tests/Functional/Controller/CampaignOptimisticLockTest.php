@@ -19,7 +19,6 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\LeadList;
 use PHPUnit\Framework\Assert;
-use Symfony\Component\DomCrawler\Crawler;
 
 class CampaignOptimisticLockTest extends MauticMysqlTestCase
 {

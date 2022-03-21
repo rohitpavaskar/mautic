@@ -14,15 +14,12 @@ declare(strict_types=1);
 namespace Mautic\LeadBundle\Tests\Form\Type;
 
 use Mautic\LeadBundle\Form\Type\CampaignEventLeadAttachedType;
-use Mautic\LeadBundle\Model\FieldModel;
-use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Translation\TranslatorInterface;
 
 final class CampaignEventLeadAttachedTypeTest extends TestCase
 {
