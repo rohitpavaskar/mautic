@@ -238,7 +238,7 @@ class RealTimeExecutionerTest extends \PHPUnit\Framework\TestCase
             ->willReturn('email');
         $event->expects($this->exactly(4))
             ->method('getChannelId')
-            ->willReturn(3);
+            ->willReturn('3');
         $event->method('getEventType')
             ->willReturn(Event::TYPE_DECISION);
 
