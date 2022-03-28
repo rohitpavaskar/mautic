@@ -273,7 +273,7 @@ class RealTimeExecutionerTest extends \PHPUnit\Framework\TestCase
             ->willReturn('email');
         $event->expects($this->exactly(3))
             ->method('getChannelId')
-            ->willReturn(3);
+            ->willReturn('3');
         $event->expects($this->once())
             ->method('getPositiveChildren')
             ->willReturn(new ArrayCollection());
@@ -326,7 +326,7 @@ class RealTimeExecutionerTest extends \PHPUnit\Framework\TestCase
             ->willReturn('email');
         $event->expects($this->exactly(3))
             ->method('getChannelId')
-            ->willReturn(3);
+            ->willReturn('3');
         $event->method('getEventType')
             ->willReturn(Event::TYPE_DECISION);
         $event->expects($this->once())
