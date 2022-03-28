@@ -230,7 +230,7 @@ class RealTimeExecutioner
             throw new DecisionNotApplicableException("Channels, $channel and {$event->getChannel()}, do not match.");
         }
 
-        if ($channel && $channelId && $event->getChannelId() && $channelId !== $event->getChannelId()) {
+        if ($channel && $channelId && $event->getChannelId() && (int)$channelId !== (int)$event->getChannelId()) {
             throw new DecisionNotApplicableException("Channel IDs, $channelId and {$event->getChannelId()}, do not match for $channel.");
         }
 
