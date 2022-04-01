@@ -12,6 +12,7 @@ use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Entity\PointsChangeLog;
 use Mautic\LeadBundle\Form\Type\AddToCompanyActionType;
+use Mautic\LeadBundle\Form\Type\CampaignEventLeadAttachedType;
 use Mautic\LeadBundle\Form\Type\CampaignEventLeadCampaignsType;
 use Mautic\LeadBundle\Form\Type\CampaignEventLeadDeviceType;
 use Mautic\LeadBundle\Form\Type\CampaignEventLeadFieldValueType;
@@ -32,6 +33,7 @@ use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\FieldModel;
 use Mautic\LeadBundle\Model\LeadModel;
 use Mautic\LeadBundle\Model\ListModel;
+use Mautic\LeadBundle\Segment\OperatorOptions;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CampaignSubscriber implements EventSubscriberInterface
@@ -113,7 +115,9 @@ class CampaignSubscriber implements EventSubscriberInterface
                 ['onCampaignTriggerActionChangeOwner', 7],
                 ['onCampaignTriggerActionUpdateCompany', 8],
             ],
-            LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION => ['onCampaignTriggerCondition', 0],
+            LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION => [
+                ['onCampaignTriggerCondition', 0],
+            ],
         ];
     }
 
@@ -232,6 +236,16 @@ class CampaignSubscriber implements EventSubscriberInterface
         ];
 
         $event->addCondition('lead.owner', $trigger);
+
+        $trigger = [
+            'label'       => 'mautic.lead.lead.events.attached',
+            'description' => 'mautic.lead.lead.events.attached_descr',
+            'formType'    => CampaignEventLeadAttachedType::class,
+            'formTheme'   => 'MauticLeadBundle:FormTheme\ContactAddedCondition',
+            'eventName'   => LeadEvents::ON_CAMPAIGN_TRIGGER_CONDITION,
+        ];
+
+        $event->addCondition('lead.attached', $trigger);
 
         $trigger = [
             'label'       => 'mautic.lead.lead.events.campaigns',
@@ -419,7 +433,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         return $event->setResult(true);
     }
 
-    public function onCampaignTriggerCondition(CampaignExecutionEvent $event)
+    public function onCampaignTriggerCondition(CampaignExecutionEvent $event): CampaignExecutionEvent
     {
         $lead   = $event->getLead();
         $result = false;
@@ -464,6 +478,8 @@ class CampaignSubscriber implements EventSubscriberInterface
             $result   = $listRepo->checkLeadSegmentsByIds($lead, $event->getConfig()['segments']);
         } elseif ($event->checkContext('lead.owner')) {
             $result = $this->leadModel->getRepository()->checkLeadOwner($lead, $event->getConfig()['owner']);
+        } elseif ($event->checkContext('lead.attached')) {
+            $result = $this->onCampaignTriggerConditionContactAdded($event);
         } elseif ($event->checkContext('lead.campaigns')) {
             $result = $this->campaignModel->getCampaignLeadRepository()->checkLeadInCampaigns($lead, $event->getConfig());
         } elseif ($event->checkContext('lead.field_value')) {
@@ -503,6 +519,79 @@ class CampaignSubscriber implements EventSubscriberInterface
         }
 
         return $event->setResult($result);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function onCampaignTriggerConditionContactAdded(CampaignExecutionEvent $event): bool
+    {
+        $campaign = $this->campaignModel->getEntity($event->getEvent()['campaign']['id']);
+
+        $campaignExecutionEventConfig = $event->getConfig();
+
+        $timestamp              = $campaignExecutionEventConfig['timestamp'] ?? null;
+        $operator               = $campaignExecutionEventConfig['operator'] ?? null;
+        $triggerInterval        = $campaignExecutionEventConfig['triggerInterval'] ?? null;
+        $triggerIntervalUnit    = $campaignExecutionEventConfig['triggerIntervalUnit'] ?? null;
+
+        // You may replace if statement to switch and the following code to private function when multiple options available
+        if ('campaign_start_date' !== $timestamp) {
+            return false;
+        }
+
+        $publishUp        = $campaign->getPublishUp();
+        $dateAdded        = $campaign->getDateAdded();
+
+        $objEffectiveDate = ($publishUp instanceof \DateTime) ? $publishUp : $dateAdded;
+        if (!($objEffectiveDate instanceof \DateTime)) {
+            return false;
+        }
+
+        $triggerIntervalUnit = strtoupper($triggerIntervalUnit);
+        $timeNotation        = '';
+        // add T for Time units
+        if (in_array($triggerIntervalUnit, ['H', 'I'])) {
+            $timeNotation = 'T';
+            // DateInterval Minutes notation is 'M'
+            $triggerIntervalUnit = ('I' == $triggerIntervalUnit) ? 'M' : $triggerIntervalUnit;
+        }
+
+        $duration = 'P'.$timeNotation.$triggerInterval.$triggerIntervalUnit;
+
+        $interval         = new \DateInterval($duration);
+        $objEffectiveDate = clone $objEffectiveDate;
+        $objEffectiveDate->add($interval);
+
+        $now    = new \DateTime();
+        if (OperatorOptions::LESS_THAN == $operator) {
+            $result = ($now < $objEffectiveDate);
+        } else {
+            $result = ($now > $objEffectiveDate);
+        }
+
+        return $result;
+    }
+
+    public function onCampaignTriggerActionSetManipulator(CampaignExecutionEvent $event): void
+    {
+        $lead = $event->getLead();
+
+        if (!$lead instanceof Lead) {
+            return;
+        }
+
+        $campaign      = $event->getLogEntry()->getCampaign();
+        $campaignEvent = $event->getLogEntry()->getEvent();
+
+        $lead->setManipulator(
+            new LeadManipulator(
+                'campaign',
+                'trigger-action',
+                $campaignEvent->getId(),
+                sprintf('%s (%s)', $campaignEvent->getName(), $campaign->getName())
+            )
+        );
     }
 
     /**

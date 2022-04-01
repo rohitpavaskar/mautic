@@ -425,7 +425,7 @@ class Campaign extends FormEntity implements PublishStatusIconAttributesInterfac
     /**
      * Get publishUp.
      *
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getPublishUp()
     {

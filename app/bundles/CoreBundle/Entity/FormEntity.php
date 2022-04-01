@@ -212,7 +212,7 @@ class FormEntity extends CommonEntity
     /**
      * Get dateAdded.
      *
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getDateAdded()
     {

@@ -154,7 +154,11 @@ class CampaignModel extends CommonFormModel
     }
 
     /**
-     * @param object $entity
+     * Delete an array of campaigns.
+     *
+     * @param array $campaignIds
+     *
+     * @return array
      */
     public function deleteEntity($entity)
     {
