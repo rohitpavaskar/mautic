@@ -84,7 +84,6 @@ class CompanyModel extends CommonFormModel implements AjaxLookupModelInterface
     {
         // Update leads primary company name
         $this->setEntityDefaultValues($entity, 'company');
-        $this->getCompanyLeadRepository()->updateLeadsPrimaryCompanyName($entity);
 
         parent::saveEntity($entity, $unlock);
     }
@@ -100,7 +99,6 @@ class CompanyModel extends CommonFormModel implements AjaxLookupModelInterface
         // Update leads primary company name
         foreach ($entities as $entity) {
             $this->setEntityDefaultValues($entity, 'company');
-            $this->getCompanyLeadRepository()->updateLeadsPrimaryCompanyName($entity);
         }
         parent::saveEntities($entities, $unlock);
     }
@@ -1013,5 +1011,48 @@ class CompanyModel extends CommonFormModel implements AjaxLookupModelInterface
         );
 
         return $fieldData;
+    }
+
+    /**
+     * Delete an entity.
+     *
+     * @param Company $company
+     */
+    public function deleteEntity($company): void
+    {
+        $this->dispatchEvent('pre_delete', $company);
+        $company->setDeleted(new \DateTime());
+        $this->getRepository()->saveEntity($company);
+
+        $event = new CompanyEvent($company);
+        $this->dispatcher->dispatch(LeadEvents::COMPANY_SOFT_DELETE, $event);
+    }
+
+    /**
+     * Delete an array of companies.
+     *
+     * @param array<mixed> $companyIds
+     *
+     * @return array<int,Company>
+     */
+    public function deleteEntities($companyIds)
+    {
+        $entities = [];
+        foreach ($companyIds as $companyId) {
+            $company = $this->getEntity($companyId);
+            if ($company) {
+                $entities[$companyId] = $company;
+                $this->deleteEntity($company);
+            }
+        }
+
+        return $entities;
+    }
+
+    public function permanentDeleteCompany(Company $company): void
+    {
+        $company->deletedId = $company->getId();
+        $this->getRepository()->deleteEntity($company);
+        $this->dispatchEvent('post_delete', $company);
     }
 }

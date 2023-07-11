@@ -23,6 +23,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
 
     protected function setUp(): void
     {
+        $this->configParams['update_company_mapping_data_in_background'] = false;
         parent::setUp();
 
         $companiesData = [

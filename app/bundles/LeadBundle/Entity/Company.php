@@ -141,6 +141,12 @@ class Company extends FormEntity implements CustomFieldEntityInterface, Identifi
     #[Groups(['company:read', 'company:write'])]
     private $description;
 
+    /**
+     * @var \DateTimeInterface|null
+     * @Groups({"company:read", "company:write"})
+     */
+    private $deleted;
+
     public function __construct()
     {
         $this->initializeProjects();
@@ -193,6 +199,8 @@ class Company extends FormEntity implements CustomFieldEntityInterface, Identifi
         $builder->createField('score', 'integer')
             ->nullable()
             ->build();
+
+        $builder->addNullableField('deleted', 'datetime');
 
         self::loadFixedFieldMetadata(
             $builder,
@@ -620,6 +628,24 @@ class Company extends FormEntity implements CustomFieldEntityInterface, Identifi
     {
         $this->isChanged('companydescription', $description);
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return !is_null($this->deleted);
+    }
+
+    public function getDeleted(): ?\DateTimeInterface
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(?\DateTimeInterface $deleted): self
+    {
+        $this->isChanged('companydeleted', $deleted);
+        $this->deleted = $deleted;
 
         return $this;
     }

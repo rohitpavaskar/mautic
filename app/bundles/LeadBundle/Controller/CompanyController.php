@@ -719,6 +719,7 @@ class CompanyController extends FormController
         ];
 
         if (Request::METHOD_POST === $request->getMethod()) {
+            /** @var CompanyModel $model */
             $model = $this->getModel('lead.company');
             \assert($model instanceof CompanyModel);
             $entity = $model->getEntity($objectId);

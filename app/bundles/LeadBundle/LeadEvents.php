@@ -622,6 +622,15 @@ final class LeadEvents
     public const COMPANY_POST_MERGE = 'mautic.company_post_merge';
 
     /**
+     * The mautic.company_soft_delete event is thrown after a company is marked as deleted..
+     *
+     * The event listener receives a Mautic\LeadBundle\Event\CompanyEvent instance.
+     *
+     * @var string
+     */
+    public const COMPANY_SOFT_DELETE = 'mautic.company_soft_delete';
+
+    /**
      * The mautic.list_filters_choices_on_generate event is dispatched when the choices for list filters are generated.
      *
      * The event listener receives a

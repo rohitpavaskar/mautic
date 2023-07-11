@@ -725,6 +725,13 @@ class CommonRepository extends ServiceEntityRepository
               ->setParameter('true', true, 'boolean');
         }
 
+        // Non Deleted Only
+        if ($reflection->hasMethod('getDeleted')) {
+            $q->andWhere(
+                $q->expr()->isNull($prefix.'deleted')
+            );
+        }
+
         if ($limit) {
             $q->setMaxResults((int) $limit);
         }

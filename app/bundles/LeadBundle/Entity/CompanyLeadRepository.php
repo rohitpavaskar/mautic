@@ -5,6 +5,7 @@ namespace Mautic\LeadBundle\Entity;
 use Doctrine\DBAL\ArrayParameterType;
 use Mautic\CoreBundle\Entity\CommonRepository;
 use Mautic\LeadBundle\Exception\PrimaryCompanyNotFoundException;
+use Mautic\LeadBundle\Model\CompanyModel;
 
 /**
  * @extends CommonRepository<CompanyLead>
@@ -12,6 +13,18 @@ use Mautic\LeadBundle\Exception\PrimaryCompanyNotFoundException;
 class CompanyLeadRepository extends CommonRepository
 {
     public const DELETE_BATCH_SIZE = 1000;
+
+    public const BATCH_SIZE = 5000;
+
+    private CompanyModel $companyModel;
+
+    /**
+     * Sets company model.
+     */
+    public function setCompanyModel(CompanyModel $companyModel): void
+    {
+        $this->companyModel = $companyModel;
+    }
 
     /**
      * @param CompanyLead[] $entities
@@ -95,6 +108,7 @@ class CompanyLeadRepository extends CommonRepository
             ->join('comp', MAUTIC_TABLE_PREFIX.'companies_leads', 'cl', 'cl.company_id = comp.id')
             ->andWhere('cl.is_primary = 1')
             ->andWhere('cl.lead_id IN (:ids)')
+            ->andWhere($q->expr()->isNull('comp.deleted'))
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
         return $q->executeQuery()->fetchAllAssociative();
@@ -160,8 +174,10 @@ class CompanyLeadRepository extends CommonRepository
         $q->select('cl.company_id, comp.companyname, comp.companycity, comp.companycountry')
             ->from(MAUTIC_TABLE_PREFIX.'companies_leads', 'cl')
             ->join('cl', MAUTIC_TABLE_PREFIX.'companies', 'comp', 'comp.id = cl.company_id')
-            ->where('cl.lead_id = :leadId')
-            ->setParameter('leadId', $leadId);
+            ->where(
+                $q->expr()->eq('cl.lead_id', ':leadId'),
+                $q->expr()->isNull('comp.deleted')
+            )->setParameter('leadId', $leadId);
         $q->orderBy('cl.date_added', 'DESC');
 
         $result = $q->executeQuery()->fetchAllAssociative();
@@ -209,21 +225,49 @@ class CompanyLeadRepository extends CommonRepository
         if ($company->isNew() || empty($company->getChanges()['fields']['companyname'])) {
             return;
         }
+        $this->updateCompanyNameOnLeads($company);
+    }
+
+    public function updateCompanyNameOnLeads(Company $company): void
+    {
         $q = $this->getEntityManager()->getConnection()->createQueryBuilder();
         $q->select('cl.lead_id')
-            ->from(MAUTIC_TABLE_PREFIX.'companies_leads', 'cl');
-        $q->where($q->expr()->eq('cl.company_id', ':companyId'))
-            ->setParameter('companyId', $company->getId())
-            ->andWhere('cl.is_primary = 1');
-        $leadIds = $q->executeQuery()->fetchOne();
-        if (!empty($leadIds)) {
+            ->from(MAUTIC_TABLE_PREFIX.'companies_leads', 'cl')
+            ->join('cl', MAUTIC_TABLE_PREFIX.'leads', 'l', 'l.id = cl.lead_id')
+            ->where($q->expr()->eq('cl.company_id', ':companyId'))
+            ->setParameter(':companyId', $company->getId())
+            ->andWhere($q->expr()->neq('l.company', ':company'))
+            ->setParameter(':company', $company->getName())
+            ->andWhere('cl.is_primary = 1')
+            ->setMaxResults(self::BATCH_SIZE);
+        while ($leadIds = $q->executeQuery()->fetchFirstColumn()) {
             $this->getEntityManager()->getConnection()->createQueryBuilder()
             ->update(MAUTIC_TABLE_PREFIX.'leads')
             ->set('company', ':company')
             ->setParameter('company', $company->getName())
             ->where(
-                $q->expr()->in('id', $leadIds)
-            )->executeStatement();
+                $q->expr()->in('id', ':leadIds')
+            )
+            ->setParameter('leadIds', $leadIds, Connection::PARAM_INT_ARRAY)
+            ->executeStatement();
+        }
+    }
+
+    public function deleteCompanyLeads(int $companyId): void
+    {
+        $tableName  = MAUTIC_TABLE_PREFIX.'companies_leads';
+        $sql        = "DELETE FROM {$tableName} WHERE company_id = {$companyId} LIMIT ".self::BATCH_SIZE;
+        $conn       = $this->getEntityManager()->getConnection();
+        while ($conn->executeQuery($sql)->rowCount()) {
+        }
+    }
+
+    public function changePrimaryCompanyToLatest(int $companyId): void
+    {
+        while ($companyLeads = $this->findBy(['company' => $companyId, 'primary' => 1], [], self::BATCH_SIZE, 0)) {
+            foreach ($companyLeads as $companyLead) {
+                $this->companyModel->removeLeadFromCompany($companyLead->getCompany(), $companyLead->getlead());
+            }
         }
     }
 
