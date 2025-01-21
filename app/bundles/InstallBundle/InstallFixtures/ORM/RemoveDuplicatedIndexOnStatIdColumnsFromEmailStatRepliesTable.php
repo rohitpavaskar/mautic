@@ -23,7 +23,7 @@ class RemoveDuplicatedIndexOnStatIdColumnsFromEmailStatRepliesTable extends Abst
 
     public function __construct(IndexSchemaHelper $indexSchemaHelper, EventDispatcherInterface $eventDispatcher)
     {
-        $eventDispatcher->addListener(PreExecuteEvent::class, function (PreExecuteEvent $event) use ($indexSchemaHelper) {
+        $eventDispatcher->addListener(PreExecuteEvent::class, function (PreExecuteEvent $event) use ($indexSchemaHelper): void {
             $table   = $this->container->getParameter('mautic.db_table_prefix').self::TABLE_NAME;
             $indexes = $event->getEntityManager()->getConnection()->createSchemaManager()->listTableIndexes($table);
             $indexSchemaHelper->setName(self::TABLE_NAME);
