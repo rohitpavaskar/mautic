@@ -7,44 +7,38 @@ namespace Mautic\LeadBundle\Command;
 use Mautic\CoreBundle\Helper\ExitCode;
 use Mautic\LeadBundle\Entity\CompanyLeadRepository;
 use Mautic\LeadBundle\Entity\CompanyRepository;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(
+    name: DeleteCompanyLeads::COMMAND_NAME,
+    description: 'Delete Company reference from leads and update leads with new primary company.'
+)]
 class DeleteCompanyLeads extends Command
 {
     public const COMMAND_NAME = 'mautic:company:delete_company_leads';
 
-    private CompanyLeadRepository $companyLeadRepository;
-
-    private CompanyRepository $companyRepository;
-
     private OutputInterface $output;
 
     public function __construct(
-        CompanyLeadRepository $companyLeadRepository,
-        CompanyRepository $companyRepository
+        private CompanyLeadRepository $companyLeadRepository,
+        private CompanyRepository $companyRepository,
     ) {
-        $this->companyLeadRepository   = $companyLeadRepository;
-        $this->companyRepository       = $companyRepository;
         parent::__construct();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function configure(): void
     {
-        $this->setName(self::COMMAND_NAME)
-            ->setDescription('Delete Company referance from leads and update leads with new primary company.')
-            ->addOption(
-                '--company-id',
-                '-i',
-                InputOption::VALUE_REQUIRED,
-                'Company id to delete references.',
-                null
-            );
+        $this->addOption(
+            '--company-id',
+            '-i',
+            InputOption::VALUE_REQUIRED,
+            'Company id to delete references.',
+            null
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -57,14 +51,13 @@ class DeleteCompanyLeads extends Command
             $this->processDeleteCompany($companyId);
 
             return ExitCode::SUCCESS;
-        } else {
-            $deletedCompanies = $this->companyRepository->getDeletedCompanies();
-            foreach ($deletedCompanies as $company) {
-                $this->processDeleteCompany($company->getId());
-            }
-
-            return ExitCode::SUCCESS;
         }
+        $deletedCompanies = $this->companyRepository->getDeletedCompanies();
+        foreach ($deletedCompanies as $company) {
+            $this->processDeleteCompany($company->getId());
+        }
+
+        return ExitCode::SUCCESS;
     }
 
     private function processDeleteCompany(int $companyId): void

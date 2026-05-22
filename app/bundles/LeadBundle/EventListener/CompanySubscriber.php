@@ -72,19 +72,6 @@ class CompanySubscriber implements EventSubscriberInterface
             'ipAddress' => $this->ipLookupHelper->getIpAddressFromRequest(),
         ];
         $this->auditLogModel->writeToLog($log);
-        $this->clearCompanyInLeadsCompanyFields($company->getName());
-    }
-
-    private function clearCompanyInLeadsCompanyFields(?string $companyName): void
-    {
-        if (null === $companyName) {
-            return;
-        }
-        $connection = $this->entityManager->getConnection();
-        $connection->executeStatement(
-            'UPDATE '.MAUTIC_TABLE_PREFIX.'leads SET company = NULL WHERE company = :companyName',
-            ['companyName' => $companyName]
-        );
     }
 
     public function onCompanySoftDelete(Events\CompanyEvent $event): void

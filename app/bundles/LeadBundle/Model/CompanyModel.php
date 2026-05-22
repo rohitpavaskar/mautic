@@ -1035,7 +1035,7 @@ class CompanyModel extends CommonFormModel implements AjaxLookupModelInterface
      *
      * @return array<int,Company>
      */
-    public function deleteEntities($companyIds)
+    public function deleteEntities($companyIds): array
     {
         $entities = [];
         foreach ($companyIds as $companyId) {

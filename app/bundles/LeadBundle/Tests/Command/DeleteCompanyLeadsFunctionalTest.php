@@ -21,7 +21,7 @@ final class DeleteCompanyLeadsFunctionalTest extends MauticMysqlTestCase
 
     protected $useCleanupRollback = false;
 
-    public function testDeduplicateCommandWithUniqueEmail(): void
+    public function testDeleteCompanyLeadsCommand(): void
     {
         /**
          * @var CompanyLeadRepository
@@ -59,6 +59,7 @@ final class DeleteCompanyLeadsFunctionalTest extends MauticMysqlTestCase
         $this->attachContactToCompany($contact3, $company3);
 
         $this->softDeleteCompany($company1);
+        $this->softDeleteCompany($company2);
 
         $this->testSymfonyCommand(DeleteCompanyLeads::COMMAND_NAME, ['--company-id' => $company1->getId()]);
 
@@ -67,7 +68,6 @@ final class DeleteCompanyLeadsFunctionalTest extends MauticMysqlTestCase
         Assert::assertNull($contactRepository->getEntity($contact2->getId())->getCompany(), 'Company is set to null when no other company is attached.');
         Assert::assertSame($company2->getName(), $contactRepository->getEntity($contact1->getId())->getCompany(), 'Another company is made primary for the contact.');
 
-        $this->softDeleteCompany($company2);
         $this->testSymfonyCommand(DeleteCompanyLeads::COMMAND_NAME);
 
         Assert::assertSame(1, $companyRepository->count([]), '1 company is not deleted');

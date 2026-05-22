@@ -3,13 +3,14 @@
 namespace Mautic\LeadBundle\Entity;
 
 use Doctrine\Common\Collections\Order;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\ORM\QueryBuilder;
 use Mautic\CoreBundle\Entity\CommonRepository;
 use Mautic\LeadBundle\Event\CompanyBuildSearchEvent;
 use Mautic\LeadBundle\LeadEvents;
-use Mautic\ProjectBundle\Entity\ProjectRepositoryTrait;
 use Mautic\LeadBundle\Model\CompanyModel;
+use Mautic\ProjectBundle\Entity\ProjectRepositoryTrait;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -375,7 +376,7 @@ class CompanyRepository extends CommonRepository implements CustomFieldRepositor
                     $qb->expr()->in('l.lead_id', $contacts)
                 )
             )
-            ->setParameter('leadIds', $contacts, Connection::PARAM_INT_ARRAY)
+            ->setParameter('leadIds', $contacts, ArrayParameterType::INTEGER)
             ->andWhere($qb->expr()->isNull('c.deleted'))
             ->addOrderBy('l.date_added', 'DESC') // primary should be [0]
             ->addOrderBy('l.company_id', 'DESC');
@@ -540,6 +541,7 @@ class CompanyRepository extends CommonRepository implements CustomFieldRepositor
         if ($limit > 0) {
             $q->setMaxResults($limit);
         }
+        $q->andWhere($q->expr()->isNull('c.deleted'));
 
         return $q->executeQuery()->fetchAllAssociative();
     }
@@ -593,140 +595,11 @@ class CompanyRepository extends CommonRepository implements CustomFieldRepositor
             ->where($q->expr()->eq('is_published', true))
             ->andWhere($q->expr()->like('companyname', ':filterVar'))
             ->setParameter('filterVar', '%'.$filterVal.'%')
-            ->orderBy('companyname')
-            ->setMaxResults(50);
-
-        return $q->executeQuery()->fetchAllAssociative();
-    }
-
-    /**
-     * @param CompositeExpression  $expr
-     * @param array<string,string> $parameters
-     * @param null                 $labelColumn
-     * @param string               $valueColumn
-     *
-     * @return array<int,string>
-     */
-    public function getAjaxSimpleCompanyNameList(CompositeExpression $expr = null, array $parameters = [], $labelColumn = null, $valueColumn = 'id')
-    {
-        $q = $this->_em->getConnection()->createQueryBuilder();
-
-        $alias = $prefix = $this->getTableAlias();
-        if (!empty($prefix)) {
-            $prefix .= '.';
-        }
-
-        $tableName = $this->_em->getClassMetadata($this->getEntityName())->getTableName();
-
-        $class      = '\\'.$this->getClassName();
-        $reflection = new \ReflectionClass(new $class());
-
-        // Get the label column if necessary
-        if (null == $labelColumn) {
-            if ($reflection->hasMethod('getTitle')) {
-                $labelColumn = 'title';
-            } else {
-                $labelColumn = 'name';
-            }
-        }
-
-        $q->select($prefix.$valueColumn.' as id, comp.companyname as value')
-            ->from($tableName, $alias)
-            ->orderBy($prefix.$labelColumn);
-
-        if (null !== $expr && $expr->count()) {
-            $q->where($expr);
-        }
-
-        if (!empty($parameters)) {
-            $q->setParameters($parameters);
-        }
-
-        // Published only
-        if ($reflection->hasMethod('getIsPublished')) {
-            $q->andWhere(
-                $q->expr()->eq($prefix.'is_published', ':true')
-            )
-                ->setParameter('true', true, 'boolean');
-        }
-        $q->andWhere($q->expr()->isNull($prefix.'deleted'));
-
-        return $q->execute()->fetchAll();
-    }
-
-    public function getCompaniesByUniqueFields(array $uniqueFieldsWithData, int $companyId = null, int $limit = null)
-    {
-        $q = $this->getEntityManager()->getConnection()->createQueryBuilder()
-            ->select('c.*')
-            ->from(MAUTIC_TABLE_PREFIX.'companies', 'c');
-
-        // loop through the fields and
-        foreach ($uniqueFieldsWithData as $col => $val) {
-            $q->{$this->getUniqueIdentifiersWherePart()}("c.$col = :".$col)
-                ->setParameter($col, $val);
-        }
-
-        // if we have a lead ID lets use it
-        if (!empty($companyId)) {
-            // make sure that its not the id we already have
-            $q->andWhere('c.id != :companyId')
-                ->setParameter('companyId', $companyId);
-        }
-
-        if ($limit) {
-            $q->setMaxResults($limit);
-        }
-        $q->andWhere($q->expr()->isNull('c.deleted'));
-        $results = $q->execute()->fetchAll();
-
-        // Collect the IDs
-        $companies = [];
-        foreach ($results as $r) {
-            $companies[$r['id']] = $r;
-        }
-
-        // Get entities
-        $q = $this->getEntityManager()->createQueryBuilder()
-            ->select('c')
-            ->from(Company::class, 'c');
-
-        $q->where(
-            $q->expr()->in('c.id', ':ids')
-        )
-            ->setParameter('ids', array_keys($companies))
-            ->orderBy('c.dateAdded', 'DESC')
-            ->addOrderBy('c.id', 'DESC');
-
-        $entities = $q->getQuery()
-            ->getResult();
-
-        /** @var Company $company */
-        foreach ($entities as $company) {
-            $company->setFields(
-                $this->formatFieldValues($companies[$company->getId()], true, 'company')
-            );
-        }
-
-        return $entities;
-    }
-
-    /**
-     * @return array<string[]>
-     */
-    public function getCompanyLookupData(string $filterVal): array
-    {
-        $q = $this->_em->getConnection()->createQueryBuilder();
-
-        $q->select('id, companyname, companycity, companystate')
-            ->from(MAUTIC_TABLE_PREFIX.Company::TABLE_NAME)
-            ->where($q->expr()->eq('is_published', true))
-            ->andWhere($q->expr()->like('companyname', ':filterVar'))
-            ->setParameter('filterVar', '%'.$filterVal.'%')
             ->andWhere($q->expr()->isNull('deleted'))
             ->orderBy('companyname')
             ->setMaxResults(50);
 
-        return $q->execute()->fetchAllAssociative();
+        return $q->executeQuery()->fetchAllAssociative();
     }
 
     public function deleteCompanyPermanently(int $companyId): void
